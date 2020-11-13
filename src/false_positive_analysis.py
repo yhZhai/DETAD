@@ -59,7 +59,7 @@ def split_predictions_by_score_ranges(fp_error_analysis, groups):
                               'Localization Err': 3,
                               'Confusion Err': 4,
                               'Background Err': 5}
-    fp_error_types_inverse_legned = dict([(v, k) for k, v in fp_error_types_legned.iteritems()])
+    fp_error_types_inverse_legned = dict([(v, k) for k, v in fp_error_types_legned.items()])
 
     for g in range(groups):
         filtered_prediction[g] = pd.concat(filtered_prediction_df_list[g], ignore_index=True)
@@ -150,7 +150,7 @@ def plot_fp_analysis(fp_error_analysis, save_filename,
     values,labels = [],[]
     _, _, fp_error_types_precentage_df = split_predictions_by_score_ranges(fp_error_analysis,fp_error_analysis.limit_factor)
     order = np.array([4,2,5,3,1,0])
-    for this_limit_factor, this_fp_error_types_precentage_df  in fp_error_types_precentage_df.iteritems():
+    for this_limit_factor, this_fp_error_types_precentage_df  in fp_error_types_precentage_df.items():
         values+=[this_fp_error_types_precentage_df['avg'].values[order]]
         labels+=['$%dG$' % (this_limit_factor+1)]
 

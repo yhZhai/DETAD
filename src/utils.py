@@ -1,14 +1,15 @@
 import json
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 import numpy as np
 
-API = 'http://ec2-52-11-11-89.us-west-2.compute.amazonaws.com/challenge17/api.py'
+# API = 'http://ec2-52-11-11-89.us-west-2.compute.amazonaws.com/challenge17/api.py'
+API = 'http://ec2-52-25-205-214.us-west-2.compute.amazonaws.com/challenge19/api.py'
 
 def get_blocked_videos(api=API):
     api_url = '{}?action=get_blocked'.format(api)
-    req = urllib2.Request(api_url)
-    response = urllib2.urlopen(req)
+    req = urllib.request.Request(api_url)
+    response = urllib.request.urlopen(req)
     return json.loads(response.read())
 
 def interpolated_prec_rec(prec, rec):
