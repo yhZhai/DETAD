@@ -1,0 +1,1 @@
+python src/false_positive_analysis.py --ground_truth_filename data/activity_net_train_val_extra_characteristics.v1-3.min.json --subset validation --prediction_filename data/epoch_25.json --output_folder sample_output/validation

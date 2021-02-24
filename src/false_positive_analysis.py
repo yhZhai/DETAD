@@ -166,12 +166,12 @@ def plot_fp_analysis(fp_error_analysis, save_filename,
 
     order = np.array([4,0,1,3,2])
     subplot_error_type_impact(fig=fig, ax=fig.add_subplot(grid[-2:]),
-                              values=np.array([fp_error_analysis.average_mAP_gain.values()]).T[order,:], 
-                              labels=np.array(fp_error_analysis.average_mAP_gain.keys())[order], 
+                              values=np.array([list(fp_error_analysis.average_mAP_gain.values())]).T[order, :], 
+                              labels=np.array(list(fp_error_analysis.average_mAP_gain.keys()))[order], 
                               colors=colors[::-1],
                               xlabel='Error Type', ylabel='Average-mAP$_N$\nImprovment $(\%)$',
                               title='Removing Error Impact', fontsize=fontsize,
-                              top=np.ceil(np.max(fp_error_analysis.average_mAP_gain.values())*100*1.1))
+                              top=np.ceil(np.max(list(fp_error_analysis.average_mAP_gain.values()))*100*1.1))
     
     plt.tight_layout()
     fig.savefig(save_filename,box_extra_artists=(lgd,), bbox_inches='tight')
