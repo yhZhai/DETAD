@@ -13,7 +13,7 @@ from joblib import Parallel, delayed
 class ActionDetectorDiagnosis(object):
 
     GROUND_TRUTH_FIELDS = ['database', 'taxonomy', 'version']
-    PREDICTION_FIELDS = ['results', 'version']
+    PREDICTION_FIELDS = ['results']
 
     def __init__(self, ground_truth_filename=None, prediction_filename=None,
                  ground_truth_fields=GROUND_TRUTH_FIELDS,

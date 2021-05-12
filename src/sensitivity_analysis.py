@@ -233,7 +233,7 @@ def main(ground_truth_filename, subset, prediction_filename, output_folder, is_t
                                                 subset=subset, 
                                                 verbose=True, 
                                                 check_status=True,
-                                                load_extra_annotations=True,
+                                                load_extra_annotations=False,
                                                 characteristic_names_to_bins=characteristic_names_to_bins,
                                                 normalize_ap=True,
                                                 minimum_normalized_precision_threshold_for_detection=0.0
@@ -254,13 +254,13 @@ if __name__ == '__main__':
     parser = ArgumentParser(description='Run the sensitivity analysis.',
                             formatter_class=ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('--ground_truth_filename', required=True, type=str,
+    parser.add_argument('-gt', '--ground_truth_filename', required=True, type=str,
                         help='The path to the JSON file containing the ground truth annotations')
-    parser.add_argument('--subset', default='validation', type=str,
+    parser.add_argument('-sb', '--subset', default='validation', type=str,
                         help='The dataset subset to use for the analysis')
-    parser.add_argument('--prediction_filename', required=True, type=str,
+    parser.add_argument('-pd', '--prediction_filename', required=True, type=str,
                         help='The path to the JSON file containing the method\'s predictions')
-    parser.add_argument('--output_folder', required=True, type=str,
+    parser.add_argument('-of', '--output_folder', required=True, type=str,
                         help='The path to the folder in which the results will be saved')
     parser.add_argument('--is_thumos14', default=False, action='store_true',
                       help='Pass this argument if the dataset used is THUMOS14 and not ActivityNet')
