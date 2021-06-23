@@ -290,8 +290,9 @@ class ActionDetectorDiagnosis(object):
             print('[RESULTS] Performance on ActivityNet detection task.')
             print('[RESULTS] Using %d annotation segment(s) per instance' % self.evaluate_with_multi_segments if self.evaluate_with_multi_segments and self.load_extra_annotations else '')
             print('\tAverage-mAP{}: {}'.format('_N' if self.normalize_ap else '', self.average_mAP))
-            # print '\tAverage-mRecall: {}'.format(self.average_mRecall)
-            # print '\tAverage-mPrecision: {}'.format(self.average_mPrecision)
+            print('mAP {}: {}'.format(self.tiou_thresholds, self.mAP))
+            print('\tAverage-mRecall: {}'.format(self.average_mRecall))
+            print('\tAverage-mPrecision: {}'.format(self.average_mPrecision))
 
     def wrapper_analyze_fp_error_types(self):
         self.fp_error_types_legned = {'True Positive': 0,

@@ -202,7 +202,7 @@ def main(ground_truth_filename, subset, prediction_filename, output_folder, is_t
         characteristic_names_to_bins = {'coverage': (np.array([0,0.02,0.04,0.06,0.08,1]), ['XS','S','M','L','XL']),
                                         'length': (np.array([0,3,6,12,18,np.inf]), ['XS','S','M','L','XL']),
                                         'num-instances': (np.array([-1,1,40,80,np.inf]), ['XS','S','M','L'])}
-        tiou_thresholds = [0.5]
+        tiou_thresholds = np.linspace(0.1, 0.9, 9)
 
     fp_error_analysis = ActionDetectorDiagnosis(ground_truth_filename=ground_truth_filename,
                                                 prediction_filename=prediction_filename,
