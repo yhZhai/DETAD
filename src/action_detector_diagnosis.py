@@ -10,6 +10,7 @@ from utils import segment_iou
 
 from joblib import Parallel, delayed
 
+
 class ActionDetectorDiagnosis(object):
 
     GROUND_TRUTH_FIELDS = ['database']
@@ -18,19 +19,19 @@ class ActionDetectorDiagnosis(object):
     def __init__(self, ground_truth_filename=None, prediction_filename=None,
                  ground_truth_fields=GROUND_TRUTH_FIELDS,
                  prediction_fields=PREDICTION_FIELDS,
-                 tiou_thresholds=np.linspace(0.5, 0.95, 10), 
+                 tiou_thresholds=np.linspace(0.5, 0.95, 10),
                  limit_factor=None,
                  min_tiou_thr=0.1,
-                 subset='testing', 
-                 verbose=False, 
+                 subset='testing',
+                 verbose=False,
                  check_status=True,
                  load_extra_annotations=False,
-                 characteristic_names_to_bins={'context-size': (range(-1,7), ['0','1','2','3','4','5','6']),
-                                               'context-distance': (range(-1,4), ['Inf','N','M','F']),
-                                               'agreement': (np.linspace(0,1.0,6), ['XW','W','M','H','XH']),
-                                               'coverage': (np.linspace(0,1.0,6), ['XS','S','M','L','XL']),
-                                               'length': (np.array([0,30,60,120,180,np.inf]), ['XS','S','M','L','XL']),
-                                               'num-instances': (np.array([-1,1,4,8,np.inf]), ['XS','S','M','L'])},
+                 characteristic_names_to_bins={'context-size': (range(-1, 7), ['0', '1', '2', '3', '4', '5', '6']),
+                                               'context-distance': (range(-1, 4), ['Inf', 'N', 'M', 'F']),
+                                               'agreement': (np.linspace(0, 1.0, 6), ['XW', 'W', 'M', 'H', 'XH']),
+                                               'coverage': (np.linspace(0, 1.0, 6), ['XS', 'S', 'M', 'L', 'XL']),
+                                               'length': (np.array([0, 30, 60, 120, 180, np.inf]), ['XS', 'S', 'M', 'L', 'XL']),
+                                               'num-instances': (np.array([-1, 1, 4, 8, np.inf]), ['XS', 'S', 'M', 'L'])},
                  normalize_ap=False,
                  minimum_normalized_precision_threshold_for_detection=0.00,
                  evaluate_with_multi_segments=None):
@@ -83,7 +84,6 @@ class ActionDetectorDiagnosis(object):
             print('\tNumber of predictions: {}'.format(nr_pred))
             print('\tFixed threshold for tiou score: {}'.format(self.tiou_thresholds))
 
-
     def _import_ground_truth(self, ground_truth_filename):
         """Reads ground truth file, checks if it is well formatted, and returns
            the ground truth instances and the activity classes.
@@ -110,10 +110,10 @@ class ActionDetectorDiagnosis(object):
         gt_id_lst, current_gt_id = [], 0
         activity_index, cidx = {}, 0
         video_lst, t_start_lst, t_end_lst, label_lst = [], [], [], []
-        
+
         if self.load_extra_annotations:
             print('[INIT] Loading extra annotations')
-            extra_annotations = dict(zip(self.characteristic_names,[[] for _ in range(len(self.characteristic_names))]))
+            extra_annotations = dict(zip(self.characteristic_names, [[] for _ in range(len(self.characteristic_names))]))
 
         for videoid, v in data['database'].items():
             if self.subset != v['subset']:
@@ -132,9 +132,9 @@ class ActionDetectorDiagnosis(object):
                         t_start_lst.append(float(ann['all-segments'][seg_idx][0]))
                         t_end_lst.append(float(ann['all-segments'][seg_idx][1]))
                         label_lst.append(activity_index[ann['label']])
-                        
+
                         for characteristic_name in self.characteristic_names:
-                            extra_annotations[characteristic_name].append(ann[characteristic_name]) 
+                            extra_annotations[characteristic_name].append(ann[characteristic_name])
                 else:
                     gt_id_lst.append(current_gt_id)
                     video_lst.append(videoid)
@@ -143,15 +143,15 @@ class ActionDetectorDiagnosis(object):
                     label_lst.append(activity_index[ann['label']])
                     if self.load_extra_annotations:
                         for characteristic_name in self.characteristic_names:
-                            extra_annotations[characteristic_name].append(ann[characteristic_name]) 
-                current_gt_id +=1
+                            extra_annotations[characteristic_name].append(ann[characteristic_name])
+                current_gt_id += 1
 
         ground_truth = pd.DataFrame({'gt-id': gt_id_lst,
                                      'video-id': video_lst,
                                      't-start': t_start_lst,
                                      't-end': t_end_lst,
                                      'label': label_lst,
-                                     })        
+                                     })
 
         if self.load_extra_annotations:
             for characteristic_name in self.characteristic_names:
@@ -159,13 +159,15 @@ class ActionDetectorDiagnosis(object):
 
             for (characteristic_name, (bins, labels)) in self.characteristic_names_to_bins.items():
                 ground_truth[characteristic_name] = extra_annotations[characteristic_name]
-                ground_truth[characteristic_name] = pd.cut(ground_truth[characteristic_name], precision=2, bins=bins, labels=labels, include_lowest=True)
+                ground_truth[characteristic_name] = pd.cut(
+                    ground_truth[characteristic_name],
+                    precision=2, bins=bins, labels=labels, include_lowest=True)
 
             if 'coverage' in self.characteristic_names:
                 # remove instances with coverage > 1
                 ground_truth = ground_truth.loc[(np.array(extra_annotations['coverage'])) <= 1.0]
 
-        # remove instances of length <=0 
+        # remove instances of length <=0
         ground_truth = ground_truth.loc[ground_truth['t-start'].values < ground_truth['t-end'].values]
 
         return ground_truth, activity_index
@@ -215,7 +217,6 @@ class ActionDetectorDiagnosis(object):
 
         return prediction
 
-
     def _limit_prediction(self):
         """
             Of each class J, limit the predictions to the top scoring (N_j * self.limit_factor) 
@@ -223,7 +224,7 @@ class ActionDetectorDiagnosis(object):
         """
         ground_truth_gbvn = self.ground_truth.groupby('label')
         prediction_gbvn = self.prediction.groupby('label')
-        
+
         filtered_prediction_df_list = []
         for label, this_ground_truth in ground_truth_gbvn:
             try:
@@ -231,7 +232,7 @@ class ActionDetectorDiagnosis(object):
                 this_prediction = prediction_gbvn.get_group(label)
             except Exception as e:
                 continue
-            
+
             # pick the top (len(this_ground_truth)*self.limit_factor) predictions
             filtered_prediction_df_list += [this_prediction.nlargest(n=int(len(this_ground_truth)*self.limit_factor),
                                                                      columns='score')]
@@ -252,18 +253,18 @@ class ActionDetectorDiagnosis(object):
         matched_gt_id = np.zeros((len(self.tiou_thresholds), len(self.prediction)))
 
         results = Parallel(n_jobs=16)(
-                    delayed(compute_average_precision_detection)(
-                        ground_truth=self.ground_truth.loc[self.ground_truth['label'] == cidx].reset_index(drop=True),
-                        prediction=self.prediction.loc[self.prediction['label'] == cidx].reset_index(drop=True),
-                        tiou_thresholds=self.tiou_thresholds,
-                        normalize_ap=self.normalize_ap, 
-                        average_num_instance_per_class=self.average_num_instance_per_class,
-                        minimum_normalized_precision_threshold_for_detection=self.minimum_normalized_precision_threshold_for_detection,
-                    ) for cidx in self.activity_index.values())
-        
+            delayed(compute_average_precision_detection)(
+                ground_truth=self.ground_truth.loc[self.ground_truth['label'] == cidx].reset_index(drop=True),
+                prediction=self.prediction.loc[self.prediction['label'] == cidx].reset_index(drop=True),
+                tiou_thresholds=self.tiou_thresholds,
+                normalize_ap=self.normalize_ap,
+                average_num_instance_per_class=self.average_num_instance_per_class,
+                minimum_normalized_precision_threshold_for_detection=self.minimum_normalized_precision_threshold_for_detection,
+            ) for cidx in self.activity_index.values())
+
         for i, cidx in enumerate(self.activity_index.values()):
-            ap[:,cidx], matched_this_cls_gt_id, this_cls_prediction_ids, recall[:,cidx], precision[:,cidx] = results[i]
-            matched_gt_id[:,this_cls_prediction_ids] = matched_this_cls_gt_id
+            ap[:, cidx], matched_this_cls_gt_id, this_cls_prediction_ids, recall[:, cidx], precision[:, cidx] = results[i]
+            matched_gt_id[:, this_cls_prediction_ids] = matched_this_cls_gt_id
 
         return ap, matched_gt_id, recall, precision
 
@@ -288,7 +289,8 @@ class ActionDetectorDiagnosis(object):
 
         if self.verbose:
             print('[RESULTS] Performance on ActivityNet detection task.')
-            print('[RESULTS] Using %d annotation segment(s) per instance' % self.evaluate_with_multi_segments if self.evaluate_with_multi_segments and self.load_extra_annotations else '')
+            print('[RESULTS] Using %d annotation segment(s) per instance' % self.evaluate_with_multi_segments
+                  if self.evaluate_with_multi_segments and self.load_extra_annotations else '')
             print('\tAverage-mAP{}: {}'.format('_N' if self.normalize_ap else '', self.average_mAP))
             print('mAP {}: {}'.format(self.tiou_thresholds, self.mAP))
             print('\tAverage-mRecall: {}'.format(self.average_mRecall))
@@ -305,15 +307,15 @@ class ActionDetectorDiagnosis(object):
         self.fp_error_types_inverse_legned = dict([(v, k) for k, v in self.fp_error_types_legned.items()])
 
         fp_error_types = Parallel(n_jobs=len(self.tiou_thresholds))(
-                            delayed(analyze_fp_error_types)(
-                                prediction=self.prediction,
-                                ground_truth=self.ground_truth,
-                                tiou_thr=tiou_thr,
-                                matched_gt_id_col_name=matched_gt_id_col_name,
-                                min_tiou_thr=self.min_tiou_thr,
-                                fp_error_types_legned=self.fp_error_types_legned,
-                            ) for tiou_thr, matched_gt_id_col_name in zip(self.tiou_thresholds, self.matched_gt_id_cols))
-        
+            delayed(analyze_fp_error_types)(
+                prediction=self.prediction,
+                ground_truth=self.ground_truth,
+                tiou_thr=tiou_thr,
+                matched_gt_id_col_name=matched_gt_id_col_name,
+                min_tiou_thr=self.min_tiou_thr,
+                fp_error_types_legned=self.fp_error_types_legned,
+            ) for tiou_thr, matched_gt_id_col_name in zip(self.tiou_thresholds, self.matched_gt_id_cols))
+
         return fp_error_types
 
     def diagnose(self):
@@ -329,14 +331,14 @@ class ActionDetectorDiagnosis(object):
 
         for tidx, column_name in enumerate(self.fp_error_type_cols):
             self.prediction[column_name] = self.fp_error_types[tidx]
-            
+
             this_tiou = self.tiou_thresholds[tidx]
             self.fp_error_types_count[this_tiou] = dict(zip(self.fp_error_types_legned.keys(),
                                                             [0]*len(self.fp_error_types_legned)))
             error_ids, counts = np.unique(self.fp_error_types[tidx], return_counts=True)
-            for error_id,count in zip(error_ids, counts):
+            for error_id, count in zip(error_ids, counts):
                 self.fp_error_types_count[this_tiou][self.fp_error_types_inverse_legned[error_id]] = count
-        
+
         self.fp_error_types_count_df = pd.DataFrame(self.fp_error_types_count)
         self.fp_error_types_count_df['avg'] = self.fp_error_types_count_df.mean(axis=1)
         self.fp_error_types_precentage_df = self.fp_error_types_count_df/len(self.prediction)
@@ -347,20 +349,20 @@ class ActionDetectorDiagnosis(object):
         for err_name, err_code in self.fp_error_types_legned.items():
             if err_code:
                 self.ap_gain[err_name] = np.zeros((len(self.tiou_thresholds),
-                                        len(self.activity_index)))
+                                                   len(self.activity_index)))
                 for cidx in self.activity_index.values():
 
-                    this_pred_df = self.prediction[self.prediction['label']==cidx].reset_index(drop=True)
+                    this_pred_df = self.prediction[self.prediction['label'] == cidx].reset_index(drop=True)
                     sort_idx = this_pred_df['score'].values.argsort()[::-1]
                     this_pred_df = this_pred_df.loc[sort_idx].reset_index(drop=True)
-                    this_gt_df = self.ground_truth[self.ground_truth['label']==cidx]
+                    this_gt_df = self.ground_truth[self.ground_truth['label'] == cidx]
 
-                    npos=len(this_gt_df)
+                    npos = len(this_gt_df)
 
                     for tidx in range(len(self.tiou_thresholds)):
                         this_error_types = this_pred_df[self.fp_error_type_cols[tidx]].T.values
                         tp = (~np.isnan(this_pred_df[self.matched_gt_id_cols[tidx]].T)).astype(np.int)
-                        tp = tp[this_error_types!=err_code]
+                        tp = tp[this_error_types != err_code]
                         fp = np.abs(tp - 1)
 
                         # Computing prec-rec
@@ -368,11 +370,12 @@ class ActionDetectorDiagnosis(object):
                         this_fp = np.cumsum(fp).astype(np.float)
                         rec = this_tp / npos
                         if self.normalize_ap:
-                            prec = rec * self.average_num_instance_per_class / (rec * self.average_num_instance_per_class + this_fp)
+                            prec = rec * self.average_num_instance_per_class / (
+                                rec * self.average_num_instance_per_class + this_fp)
                         else:
                             prec = rec * npos / (rec * npos + this_fp)
-                        self.ap_gain[err_name][tidx,cidx] = interpolated_prec_rec(prec, rec)
-                self.average_mAP_gain[err_name] = self.ap_gain[err_name].mean() - self.average_mAP 
+                        self.ap_gain[err_name][tidx, cidx] = interpolated_prec_rec(prec, rec)
+                self.average_mAP_gain[err_name] = self.ap_gain[err_name].mean() - self.average_mAP
 
         if self.verbose:
             print('[DIAGNOSIS] Analysis of false positive error types.')
@@ -406,8 +409,8 @@ def compute_average_precision_detection(ground_truth, prediction, tiou_threshold
     """
     gt_id_lst = np.unique(ground_truth['gt-id'].values)
     gt_id_to_index = dict(zip(gt_id_lst, range(len(gt_id_lst))))
-    lock_gt = np.ones((len(tiou_thresholds),len(gt_id_to_index))) * -1
-    
+    lock_gt = np.ones((len(tiou_thresholds), len(gt_id_to_index))) * -1
+
     npos = float(len(gt_id_lst))
 
     # Sort predictions by decreasing score order.
@@ -463,10 +466,11 @@ def compute_average_precision_detection(ground_truth, prediction, tiou_threshold
     recall_cumsum = tp_cumsum / npos
 
     if normalize_ap:
-        precision_cumsum = recall_cumsum * average_num_instance_per_class / (recall_cumsum * average_num_instance_per_class + fp_cumsum)
+        precision_cumsum = recall_cumsum * average_num_instance_per_class / \
+            (recall_cumsum * average_num_instance_per_class + fp_cumsum)
 
         discard_index = precision_cumsum <= minimum_normalized_precision_threshold_for_detection
-        
+
         tp[discard_index] = 0
         fp[discard_index] = 1
         matched_gt_id[discard_index] = np.nan
@@ -475,17 +479,19 @@ def compute_average_precision_detection(ground_truth, prediction, tiou_threshold
         fp_cumsum = np.cumsum(fp, axis=1).astype(np.float)
         recall_cumsum = tp_cumsum / npos
 
-        precision_cumsum = recall_cumsum * average_num_instance_per_class / (recall_cumsum * average_num_instance_per_class + fp_cumsum)
-    else: 
+        precision_cumsum = recall_cumsum * average_num_instance_per_class / \
+            (recall_cumsum * average_num_instance_per_class + fp_cumsum)
+    else:
         precision_cumsum = recall_cumsum * npos / (recall_cumsum * npos + fp_cumsum)
-    
-    for tidx in range(len(tiou_thresholds)):
-        ap[tidx] = interpolated_prec_rec(precision_cumsum[tidx,:], recall_cumsum[tidx,:])
 
-    recall = recall_cumsum[:,-1]
-    precision = precision_cumsum[:,-1]
+    for tidx in range(len(tiou_thresholds)):
+        ap[tidx] = interpolated_prec_rec(precision_cumsum[tidx, :], recall_cumsum[tidx, :])
+
+    recall = recall_cumsum[:, -1]
+    precision = precision_cumsum[:, -1]
 
     return ap, matched_gt_id, prediction['prediction-id'].values, recall, precision
+
 
 def analyze_fp_error_types(prediction,
                            ground_truth,
@@ -498,19 +504,18 @@ def analyze_fp_error_types(prediction,
                                                   'Localization Err': 3,
                                                   'Confusion Err': 4,
                                                   'Background Err': 5}):
-    
     """Assumes that prediction is sorted by 'prediction-id' column """
-    
+
     fp_error_types = {}
 
     # Adaptation to query faster
     ground_truth_gbvn = ground_truth.groupby('video-id')
     fp_error_types = np.zeros(len(prediction))
-    
+
     this_prediction = prediction[np.isnan(prediction[matched_gt_id_col_name])].reset_index(drop=True)
 
-    this_prediction.sort_values(by='video-id',inplace=True)
-    this_prediction.reset_index(drop=True,inplace=True)
+    this_prediction.sort_values(by='video-id', inplace=True)
+    this_prediction.reset_index(drop=True, inplace=True)
 
     current_video_id = None
 
@@ -533,7 +538,7 @@ def analyze_fp_error_types(prediction,
         top_tiou = tiou_arr.max()
         this_pred_label = this_pred['label']
 
-        if top_tiou >= tiou_thr: 
+        if top_tiou >= tiou_thr:
             if gt_with_max_tiou_label == this_pred_label:
                 # double detection error
                 fp_error_types[this_pred['prediction-id']] = fp_error_types_legned['Double Detection Err']
@@ -550,5 +555,5 @@ def analyze_fp_error_types(prediction,
         else:
             # background error
             fp_error_types[this_pred['prediction-id']] = fp_error_types_legned['Background Err']
-    
+
     return fp_error_types
