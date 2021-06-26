@@ -78,10 +78,10 @@ def split_predictions_by_score_ranges(fp_error_analysis, groups):
     return filtered_prediction, fp_error_types_count_df, fp_error_types_precentage_df
 
 
-def subplot_fp_profile(fig, ax, values, labels, colors, xticks, xlabel, ylabel, title,
-                       fontsize=14, bottom=0, top=100, bar_width=1, spacing=0.85,
-                       grid_color='gray', grid_linestyle=':', grid_lw=1,
-                       ncol=1, legend_loc='best'):
+def subplot_fp_profile(fig, ax, values, labels, colors, xticks, xlabel, ylabel,
+                       title, fontsize=14, bottom=0, top=100, bar_width=1,
+                       spacing=0.85, grid_color='gray', grid_linestyle=':',
+                       grid_lw=1, ncol=1, legend_loc='best'):
 
     ax.yaxis.grid(color=grid_color, linestyle=grid_linestyle, lw=grid_lw)
 
@@ -93,12 +93,14 @@ def subplot_fp_profile(fig, ax, values, labels, colors, xticks, xlabel, ylabel, 
                         color=colors[i],
                         label=xticks[i], zorder=0)
 
-    lgd = ax.legend(loc=legend_loc, ncol=ncol, fontsize=fontsize/1.2, edgecolor='k')
+    lgd = ax.legend(loc=legend_loc, ncol=ncol, fontsize=fontsize/1.2,
+                    edgecolor='k')
 
     ax.set_ylabel(ylabel, fontsize=fontsize)
     ax.set_xlabel(xlabel, fontsize=fontsize)
     plt.setp(ax.get_yticklabels(), fontsize=fontsize/1.2)
-    plt.xticks(np.array(index), np.array(labels[:len(values)]), fontsize=fontsize/1.2, rotation=90)
+    plt.xticks(np.array(index), np.array(labels[:len(values)]),
+               fontsize=fontsize/1.2, rotation=90)
     plt.yticks(np.linspace(0, 1, 11)*100, fontsize=fontsize/1.2)
     ax.set_ylim(bottom=bottom, top=top)
     ax.set_xlim(left=index[0]-1.25*bar_width, right=index[-1]+1.0*bar_width)
@@ -114,9 +116,10 @@ def subplot_fp_profile(fig, ax, values, labels, colors, xticks, xlabel, ylabel, 
     return lgd
 
 
-def subplot_error_type_impact(fig, ax, values, labels, colors, xlabel, ylabel, title,
-                              fontsize=14, bottom=0, top=100, bar_width=1, spacing=1.1,
-                              grid_color='gray', grid_linestyle=':', grid_lw=1):
+def subplot_error_type_impact(fig, ax, values, labels, colors, xlabel, ylabel,
+                              title, fontsize=14, bottom=0, top=100,
+                              bar_width=1, spacing=1.1, grid_color='gray',
+                              grid_linestyle=':', grid_lw=1):
 
     ax.yaxis.grid(color=grid_color, linestyle=grid_linestyle, lw=grid_lw)
 
@@ -128,7 +131,8 @@ def subplot_error_type_impact(fig, ax, values, labels, colors, xlabel, ylabel, t
                         label=labels[i])
         for bari in rects1:
             height = bari.get_height()
-            plt.gca().text(bari.get_x() + bari.get_width()/2, bari.get_height()+0.001*100, '%.1f' % height,
+            plt.gca().text(bari.get_x() + bari.get_width()/2,
+                           bari.get_height()+0.001*100, '%.1f' % height,
                            ha='center', color='black', fontsize=fontsize/1.1)
 
     ax.set_ylabel(ylabel, fontsize=fontsize)
@@ -185,7 +189,8 @@ def plot_fp_analysis(fp_error_analysis, save_filename,
     print('[Done] Output analysis is saved in %s' % save_filename)
 
 
-def main(ground_truth_filename, subset, prediction_filename, output_folder, is_thumos14):
+def main(ground_truth_filename, subset, prediction_filename, output_folder,
+         is_thumos14, normalize_ap):
     if not is_thumos14:
         if subset == 'testing':
             # ActivityNet testing
@@ -236,9 +241,8 @@ def main(ground_truth_filename, subset, prediction_filename, output_folder, is_t
                                                 check_status=True,
                                                 load_extra_annotations=False,
                                                 characteristic_names_to_bins=characteristic_names_to_bins,
-                                                normalize_ap=True,
-                                                minimum_normalized_precision_threshold_for_detection=0.0
-                                                )
+                                                normalize_ap=normalize_ap,
+                                                minimum_normalized_precision_threshold_for_detection=0.0)
 
     fp_error_analysis.evaluate()
     fp_error_analysis.diagnose()
@@ -261,7 +265,9 @@ if __name__ == '__main__':
                         help='The path to the folder in which the results will be saved')
     parser.add_argument('--is_thumos14', default=False, action='store_true',
                         help='Pass this argument if the dataset used is THUMOS14 and not ActivityNet')
+    parser.add_argument('--normalize_ap', action='store_true', default=False,
+                        help='This will slightly increase the number.')
     args = parser.parse_args()
 
     main(args.ground_truth_filename, args.subset, args.prediction_filename,
-         args.output_folder, args.is_thumos14)
+         args.output_folder, args.is_thumos14, args.normalize_ap)
